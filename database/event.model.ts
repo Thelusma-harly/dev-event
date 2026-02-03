@@ -47,7 +47,8 @@ function normalizeIsoDate(input: string): string {
   // Normalize to an ISO-8601 date-only string (YYYY-MM-DD).
   // Avoid timezone shifts by formatting using the local calendar date.
   const trimmed = input.trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  const isoDatePrefix = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoDatePrefix) return isoDatePrefix[1];
 
   const d = new Date(trimmed);
   if (Number.isNaN(d.getTime())) {

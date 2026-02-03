@@ -65,7 +65,7 @@ function normalizeTime(input: string): string {
   // Store time consistently as 24h HH:mm.
   const raw = input.trim();
 
-  const twentyFourHour = /^([01]\d|2[0-3]):([0-5]\d)$/;
+  const twentyFourHour = /^([01]?\d|2[0-3]):([0-5]\d)$/;
   const ampm = /^(\d{1,2})(?::([0-5]\d))?\s*(am|pm)$/i;
 
   const m24 = raw.match(twentyFourHour);

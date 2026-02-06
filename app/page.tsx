@@ -1,8 +1,11 @@
 import EventCard from "@/components/EventCard";
 import ExploreBtn from "@/components/ExploreBtn";
-import { events } from "@/lib/constants";
+import { IEvent } from "@/database";
+import { getAllEvents } from "@/lib/actions/event.actions";
 
-const page = () => {
+const page = async () => {
+  const events = await getAllEvents();
+
   return (
     <section>
       <h1 className="text-center">
@@ -16,11 +19,13 @@ const page = () => {
       <div className="mt-20 space-y-7">
         <h3>Featured Events</h3>
         <ul className="events">
-          {events.map((event) => (
-            <li key={event.title}>
-              <EventCard {...event} />
-            </li>
-          ))}
+          {events &&
+            events.length > 0 &&
+            events.map((event: IEvent) => (
+              <li key={event.title} className="list-none">
+                <EventCard event={event} />
+              </li>
+            ))}
         </ul>
       </div>
     </section>

@@ -1,8 +1,4 @@
-import mongoose, {
-  type HydratedDocument,
-  type Model,
-  Schema,
-} from "mongoose";
+import mongoose, { type HydratedDocument, type Model, Schema } from "mongoose";
 
 export type EventMode = "online" | "offline" | "hybrid" | (string & {});
 
@@ -227,12 +223,12 @@ const EventSchema = new Schema<IEvent>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 EventSchema.index({ slug: 1 }, { unique: true });
 
-EventSchema.pre("save", function (this: EventDocument, next) {
+EventSchema.pre("save", async function () {
   try {
     // Only regenerate the slug when the title changes.
     if (!this.slug || this.isModified("title")) {
@@ -244,20 +240,22 @@ EventSchema.pre("save", function (this: EventDocument, next) {
     this.time = normalizeTime(this.time);
 
     // Defensive check: required fields should never be empty strings.
-    const requiredStrings: Array<keyof Pick<
-      IEvent,
-      | "title"
-      | "description"
-      | "overview"
-      | "image"
-      | "venue"
-      | "location"
-      | "date"
-      | "time"
-      | "mode"
-      | "audience"
-      | "organizer"
-    >> = [
+    const requiredStrings: Array<
+      keyof Pick<
+        IEvent,
+        | "title"
+        | "description"
+        | "overview"
+        | "image"
+        | "venue"
+        | "location"
+        | "date"
+        | "time"
+        | "mode"
+        | "audience"
+        | "organizer"
+      >
+    > = [
       "title",
       "description",
       "overview",
@@ -274,21 +272,19 @@ EventSchema.pre("save", function (this: EventDocument, next) {
     for (const key of requiredStrings) {
       const value = this[key];
       if (!isNonEmptyString(value)) {
-        return next(new Error(`${key} is required`));
+        throw new Error(`${key} is required`);
       }
     }
 
     if (!Array.isArray(this.agenda) || this.agenda.length === 0) {
-      return next(new Error("agenda must be a non-empty array"));
+      throw new Error("agenda must be a non-empty array");
     }
 
     if (!Array.isArray(this.tags) || this.tags.length === 0) {
-      return next(new Error("tags must be a non-empty array"));
+      throw new Error("tags must be a non-empty array");
     }
-
-    return next();
   } catch (error) {
-    return next(error as Error);
+    throw error as Error;
   }
 });
 

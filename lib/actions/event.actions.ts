@@ -2,7 +2,6 @@
 
 import { Event } from "@/database";
 import { connectToDatabase } from "../mongodb";
-import { cacheLife } from "next/cache";
 
 export const getSimilarEventsBySlug = async (slug: string) => {
   try {
@@ -10,10 +9,12 @@ export const getSimilarEventsBySlug = async (slug: string) => {
 
     const event = await Event.findOne({ slug });
 
-    return await Event.find({
+    const similarEvents = await Event.find({
       _id: { $ne: event?._id },
       tags: { $in: event?.tags || [] },
     });
+
+    return JSON.parse(JSON.stringify(similarEvents));
   } catch (error) {
     console.error("Error fetching similar events:", error);
     return [];
@@ -21,9 +22,6 @@ export const getSimilarEventsBySlug = async (slug: string) => {
 };
 
 export const getAllEvents = async () => {
-  "use cache";
-  cacheLife("hours");
-
   try {
     await connectToDatabase();
 

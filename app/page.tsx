@@ -3,6 +3,8 @@ import ExploreBtn from "@/components/ExploreBtn";
 import { IEvent } from "@/database";
 import { getAllEvents } from "@/lib/actions/event.actions";
 
+export const revalidate = 3600; // Revalidate every 1 hour
+
 const page = async () => {
   const events = await getAllEvents();
 

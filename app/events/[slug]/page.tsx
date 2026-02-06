@@ -4,6 +4,9 @@ import { IEvent } from "@/database";
 import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+
+export const revalidate = 3600; // Revalidate every 1 hour
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -43,15 +46,21 @@ const EventAgenda = ({ agendaItems }: { agendaItems: string[] }) => (
   </div>
 );
 
-const EventDetailsPage = async ({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) => {
-  const { slug } = await params;
+async function SimilarEventsList({ slug }: { slug: string }) {
+  const similarEvents = await getSimilarEventsBySlug(slug);
 
+  return (
+    <div className="events">
+      {similarEvents.map((event: IEvent) => (
+        <EventCard key={event.title} event={event} />
+      ))}
+    </div>
+  );
+}
+
+async function EventContent({ slug }: { slug: string }) {
   const response = await fetch(`${BASE_URL}/api/events/${slug}`, {
-    next: { revalidate: 3600 }, // Cache for 1 hour
+    next: { revalidate: 3600 },
   });
 
   if (!response.ok) {
@@ -79,10 +88,8 @@ const EventDetailsPage = async ({
 
   const bookings = 10;
 
-  const similarEvents = await getSimilarEventsBySlug(slug);
-
   return (
-    <section id="event">
+    <>
       <div className="header">
         <h1>Event Description</h1>
         <p className="mt-2">{description}</p>
@@ -140,14 +147,28 @@ const EventDetailsPage = async ({
           </div>
         </aside>
       </div>
+    </>
+  );
+}
+
+const EventDetailsPage = async ({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) => {
+  const { slug } = await params;
+
+  return (
+    <section id="event">
+      <Suspense fallback={<div>Loading event details...</div>}>
+        <EventContent slug={slug} />
+      </Suspense>
 
       <div className="flex flex-col w-full pt-20 gap-4">
         <h2>Similar Events</h2>
-        <div className="events">
-          {similarEvents.map((event: IEvent) => (
-            <EventCard key={event.title} event={event} />
-          ))}
-        </div>
+        <Suspense fallback={<div>Loading similar events...</div>}>
+          <SimilarEventsList slug={slug} />
+        </Suspense>
       </div>
     </section>
   );

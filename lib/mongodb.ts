@@ -35,7 +35,7 @@ export async function connectToDatabase(): Promise<Mongoose> {
 
     if (!mongodbUri) {
       throw new Error(
-        "Missing MONGODB_URI environment variable. Set it in .env.local (development) or your deployment environment."
+        "Missing MONGODB_URI environment variable. Set it in .env.local (development) or your deployment environment.",
       );
     }
 
@@ -46,6 +46,7 @@ export async function connectToDatabase(): Promise<Mongoose> {
       maxPoolSize: 10,
       // Avoid long hangs when the URI is wrong or the cluster is unreachable.
       serverSelectionTimeoutMS: 5_000,
+      family: 4,
     };
 
     cached.promise = mongoose.connect(mongodbUri, options);

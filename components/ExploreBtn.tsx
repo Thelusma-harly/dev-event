@@ -15,6 +15,7 @@ const ExploreBtn = () => {
         alt="arrow image"
         width={24}
         height={24}
+        unoptimized
       />
     </button>
   );

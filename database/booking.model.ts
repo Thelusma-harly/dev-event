@@ -8,7 +8,7 @@ import mongoose, {
 import { Event } from "./event.model";
 
 export interface IBooking {
-  eventId: Types.ObjectId;
+  eventId: Types.ObjectId | string;
   email: string;
   createdAt: Date;
   updatedAt: Date;
@@ -44,14 +44,29 @@ const BookingSchema = new Schema<IBooking>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 BookingSchema.pre("save", async function (this: BookingDocument) {
-  // Validate foreign-key like reference at write-time to avoid orphan bookings.
-  const exists = await Event.exists({ _id: this.eventId });
+  // Ensure eventId is stored as ObjectId
+  if (typeof this.eventId === "string") {
+    try {
+      this.eventId = new Types.ObjectId(this.eventId);
+    } catch (e) {
+      throw new Error(`Invalid eventId format: ${this.eventId}`);
+    }
+  }
+
+  // Validate that the event exists in the database
+  // Event model stores _id as string, so convert to string for the query
+  const eventIdString =
+    this.eventId instanceof Types.ObjectId
+      ? this.eventId.toString()
+      : this.eventId;
+
+  const exists = await Event.exists({ _id: eventIdString });
   if (!exists) {
-    throw new Error(`Event not found for eventId: ${this.eventId.toString()}`);
+    throw new Error(`Event not found for eventId: ${eventIdString}`);
   }
 });
 

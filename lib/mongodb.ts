@@ -25,6 +25,13 @@ const cached = globalThis.mongooseCache ?? {
 
 globalThis.mongooseCache = cached;
 
+/**
+ * Establishes and reuses a Mongoose connection for the current Node.js process.
+ *
+ * @returns A connected Mongoose instance.
+ * @throws If `MONGODB_URI` is not set in the environment.
+ * @throws If establishing the connection fails.
+ */
 export async function connectToDatabase(): Promise<Mongoose> {
   // Reuse existing connection if we already have one.
   if (cached.conn) return cached.conn;

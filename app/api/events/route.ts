@@ -3,6 +3,23 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { uploadFile } from "@uploadcare/upload-client";
 
+/**
+ * Handle creation of a new event submitted as multipart/form-data.
+ *
+ * Expects the request body to be form data containing an "image" file (required)
+ * and string fields including "tags" and "agenda" (both JSON-encoded). Saves
+ * the uploaded image to Uploadcare, constructs a preview URL, creates an Event
+ * document in the database with the provided fields plus the image URL, and
+ * returns a JSON response describing the result.
+ *
+ * @param req - NextRequest whose formData must include:
+ *   - "image": File (required)
+ *   - "tags": JSON-encoded array
+ *   - "agenda": JSON-encoded array or object
+ *   - other event fields as form fields
+ * @returns A NextResponse containing JSON: on success includes a success message
+ * and the created event; on failure includes an error message (and error detail when available).
+ */
 export async function POST(req: NextRequest) {
   try {
     await connectToDatabase();
@@ -76,6 +93,11 @@ export async function POST(req: NextRequest) {
   }
 }
 
+/**
+ * Fetches all events from the database ordered by newest first and returns them as a JSON response.
+ *
+ * @returns A NextResponse whose JSON body contains `message` and `events` (an array of event documents) on success, or a `message` describing the failure on error. The response uses HTTP status 200 for success and 500 for failure.
+ */
 export async function GET() {
   try {
     await connectToDatabase();

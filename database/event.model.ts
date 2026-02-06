@@ -3,6 +3,7 @@ import mongoose, { type HydratedDocument, type Model, Schema } from "mongoose";
 export type EventMode = "online" | "offline" | "hybrid" | (string & {});
 
 export interface IEvent {
+  _id: string;
   title: string;
   /** Auto-generated from title in a pre-save hook. */
   slug?: string;
@@ -85,6 +86,11 @@ function normalizeTime(input: string): string {
 
 const EventSchema = new Schema<IEvent>(
   {
+    _id: {
+      type: String,
+      default: () => new mongoose.Types.ObjectId().toString(),
+      required: true,
+    },
     title: {
       type: String,
       required: true,
@@ -230,14 +236,15 @@ EventSchema.index({ slug: 1 }, { unique: true });
 
 EventSchema.pre("save", async function () {
   try {
+    const doc = this as unknown as IEvent;
     // Only regenerate the slug when the title changes.
-    if (!this.slug || this.isModified("title")) {
-      this.slug = slugify(this.title);
+    if (!doc.slug || this.isModified("title")) {
+      doc.slug = slugify(doc.title);
     }
 
     // Normalize date/time on every save to keep stored values consistent.
-    this.date = normalizeIsoDate(this.date);
-    this.time = normalizeTime(this.time);
+    doc.date = normalizeIsoDate(doc.date);
+    doc.time = normalizeTime(doc.time);
 
     // Defensive check: required fields should never be empty strings.
     const requiredStrings: Array<
@@ -270,17 +277,17 @@ EventSchema.pre("save", async function () {
     ];
 
     for (const key of requiredStrings) {
-      const value = this[key];
+      const value = doc[key];
       if (!isNonEmptyString(value)) {
         throw new Error(`${key} is required`);
       }
     }
 
-    if (!Array.isArray(this.agenda) || this.agenda.length === 0) {
+    if (!Array.isArray(doc.agenda) || doc.agenda.length === 0) {
       throw new Error("agenda must be a non-empty array");
     }
 
-    if (!Array.isArray(this.tags) || this.tags.length === 0) {
+    if (!Array.isArray(doc.tags) || doc.tags.length === 0) {
       throw new Error("tags must be a non-empty array");
     }
   } catch (error) {
